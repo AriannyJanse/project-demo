@@ -66,3 +66,44 @@ func GetUsers() []*User {
 
 	return users
 }
+
+func GetUserByID(id uint) *User {
+
+	user := &User{}
+	err := GetDB().Table("users").Where("id = ?", id).First(user).Error
+	if err != nil {
+		fmt.Println("Cannot get the user: ", err)
+		return nil
+	}
+	return user
+}
+
+func (user *User) UpdateUserByID(id uint) map[string]interface{} {
+
+	oldUser := GetUserByID(id)
+	if oldUser == nil {
+		return utils.Message(http.StatusNotFound, "Cannot find the user")
+	}
+
+	err := db.Model(&oldUser).Updates(User{Nickname: user.Nickname, Email: user.Email, Password: user.Password, CompanyID: user.CompanyID})
+	if err.Error != nil {
+		return utils.Message(http.StatusInternalServerError, "There was an issue while trying to update the user")
+	}
+
+	return utils.Message(http.StatusOK, "The user was updated")
+}
+
+func DeleteUserByID(id uint) map[string]interface{} {
+
+	user := GetUserByID(id)
+	if user == nil {
+		return utils.Message(http.StatusNotFound, "Cannot find the user")
+	}
+
+	err := GetDB().Unscoped().Where("id = ?", id).Delete(&User{}).Error
+	if err != nil {
+		return utils.Message(http.StatusInternalServerError, "There was an issue trying to delete the user"+err.Error())
+	}
+
+	return utils.Message(http.StatusOK, "The user was deleted")
+}
