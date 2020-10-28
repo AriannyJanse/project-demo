@@ -14,7 +14,7 @@ DB_USER: A user with permissions in your database.
 
 DB_HOST: Where your database engine runs, like localhost.
 
-DB_PROT: Your db engine exposed port.
+DB_PORT: Your db engine exposed port.
 
 
 

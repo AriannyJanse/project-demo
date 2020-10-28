@@ -19,11 +19,18 @@ func main() {
 	router := mux.NewRouter()
 
 	api := router.PathPrefix("/api/v1").Subrouter()
+
 	api.HandleFunc("/users", controllers.GetAllUsers).Methods(http.MethodGet)
+	api.HandleFunc("/users/{id}", controllers.GetUserByID).Methods(http.MethodGet)
 	api.HandleFunc("/users", controllers.CreateUser).Methods(http.MethodPost)
+	api.HandleFunc("/users/{id}", controllers.UpdateUserByID).Methods(http.MethodPut)
+	api.HandleFunc("/users/{id}", controllers.DeleteUserByID).Methods(http.MethodDelete)
 
 	api.HandleFunc("/companies", controllers.GetAllCompanies).Methods(http.MethodGet)
+	api.HandleFunc("/companies/{id}", controllers.GetCompanyByID).Methods(http.MethodGet)
 	api.HandleFunc("/companies", controllers.CreateCompany).Methods(http.MethodPost)
+	api.HandleFunc("/companies/{id}", controllers.UpdateCompanyByID).Methods(http.MethodPut)
+	api.HandleFunc("/companies/{id}", controllers.DeleteCompanyByID).Methods(http.MethodDelete)
 
 	fmt.Println("\nListening to port 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
