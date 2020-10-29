@@ -10,12 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func notFound(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusNotFound)
-	w.Write([]byte(`{"message": "The element was not found"}`))
-}
-
 func main() {
 	router := mux.NewRouter()
 
@@ -35,7 +29,7 @@ func main() {
 
 	corsHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	corsOrigins := handlers.AllowedOrigins([]string{"*"})
-	corsMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	corsMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"})
 
 	fmt.Println("\nListening to port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(corsOrigins, corsHeaders, corsMethods)(router)))

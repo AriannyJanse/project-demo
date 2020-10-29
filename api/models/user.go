@@ -12,9 +12,9 @@ import (
 
 type User struct {
 	gorm.Model
-	Nickname  string `gorm:"size:255;not null;unique" json:"nickname"`
-	Email     string `gorm:"size:100;not null;unique" json:"email"`
-	Password  string `gorm:"size:100;not null;" json:"password"`
+	Nickname  string `gorm:"size:100;not null;unique" json:"nickname"`
+	Email     string `gorm:"size:50;not null;unique" json:"email"`
+	Password  string `gorm:"size:50;not null;" json:"password"`
 	CompanyID uint   `json:"company_id"`
 }
 
@@ -43,7 +43,7 @@ func (user *User) Validate() (map[string]interface{}, bool) {
 
 func isEmailValid(email string) bool {
 	var emailRegex = regexp.MustCompile(`^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`)
-	if len(email) < 3 && len(email) > 254 {
+	if len(email) < 5 && len(email) > 99 {
 		return false
 	}
 	return emailRegex.MatchString(email)

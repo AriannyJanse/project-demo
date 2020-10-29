@@ -11,7 +11,7 @@ import (
 
 type Company struct {
 	gorm.Model
-	Name string `gorm:"size:255;not null;unique" json:"name"`
+	Name string `gorm:"size:100;not null;unique" json:"name"`
 }
 
 func (company *Company) Validate() (map[string]interface{}, bool) {
