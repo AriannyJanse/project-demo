@@ -22,8 +22,11 @@ var CreateUser = func(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	resp := user.Create()
-	if resp["status"] != 200 {
+	if resp["status"] != 200 && resp["status"] != 400 {
 		utils.Respond(writer, http.StatusInternalServerError, resp)
+		return
+	} else if resp["status"] == 400 {
+		utils.Respond(writer, http.StatusBadRequest, resp)
 		return
 	}
 	utils.Respond(writer, http.StatusOK, resp)
