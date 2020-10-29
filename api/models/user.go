@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/jinzhu/gorm"
 
@@ -25,6 +26,8 @@ func (user *User) Validate() (map[string]interface{}, bool) {
 
 	if user.Email == "" {
 		return utils.Message(http.StatusBadRequest, "Email is required"), false
+	} else if !isEmailValid(user.Email) {
+		return utils.Message(http.StatusBadRequest, "Email is invalid"), false
 	}
 
 	if user.Password == "" {
@@ -36,6 +39,14 @@ func (user *User) Validate() (map[string]interface{}, bool) {
 	}
 
 	return utils.Message(http.StatusOK, "success"), true
+}
+
+func isEmailValid(email string) bool {
+	var emailRegex = regexp.MustCompile(`^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`)
+	if len(email) < 3 && len(email) > 254 {
+		return false
+	}
+	return emailRegex.MatchString(email)
 }
 
 func (user *User) Create() map[string]interface{} {
