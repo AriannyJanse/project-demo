@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"project-demo/api/controllers"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -32,7 +33,11 @@ func main() {
 	api.HandleFunc("/companies/{id}", controllers.UpdateCompanyByID).Methods(http.MethodPut)
 	api.HandleFunc("/companies/{id}", controllers.DeleteCompanyByID).Methods(http.MethodDelete)
 
+	corsHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	corsOrigins := handlers.AllowedOrigins([]string{"*"})
+	corsMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+
 	fmt.Println("\nListening to port 8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(corsOrigins, corsHeaders, corsMethods)(router)))
 
 }
