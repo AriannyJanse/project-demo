@@ -43,8 +43,12 @@ function createUser(user) {
         email: user.email,
         password: user.password,
         company_id: parseInt(user.company_id)
-    }).catch((error) => {
-        console.log("Error while creating user: " + error);
+    })
+    .then(response => response)
+    .catch((error) => {
+        if (error.response) {
+            return error.response;
+          }
     })
 }
 

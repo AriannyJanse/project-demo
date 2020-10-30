@@ -18,14 +18,17 @@
 
             <v-card-text>
               <v-container>
-                <v-row>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedCompany.name"
-                      label="Name"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
+                <v-form v-model="valid">
+                  <v-row>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-text-field
+                        v-model="editedCompany.name"
+                        :rules="[rules.required]"
+                        label="Name"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-form>
               </v-container>
             </v-card-text>
 
@@ -34,7 +37,7 @@
               <v-btn color="blue darken-1" text @click="close">
                 Cancel
               </v-btn>
-              <v-btn color="blue darken-1" text @click="save">
+              <v-btn color="blue darken-1" text @click="save" :disabled="!valid">
                 Save
               </v-btn>
             </v-card-actions>
@@ -56,6 +59,15 @@
               <v-spacer></v-spacer>
             </v-card-actions>
           </v-card>
+        </v-dialog>
+        <v-dialog v-model="alertDialog" width="300">
+          <v-alert
+            style="margin-bottom: 0;"
+            type="error"
+            transition="scale-transition"
+          >
+            {{ alertMessage }}
+          </v-alert>
         </v-dialog>
       </v-toolbar>
     </template>
@@ -79,6 +91,9 @@
 import api from "@/api";
 export default {
   data: () => ({
+    valid: false,
+    alertDialog: false,
+    alertMessage: "",
     dialog: false,
     dialogDelete: false,
     headers: [
@@ -96,7 +111,8 @@ export default {
     },
     defaultCompany: {
       name: ""
-    }
+    },
+    rules: { required: value => !!value || "This field is required" }
   }),
 
   computed: {
@@ -121,7 +137,10 @@ export default {
   methods: {
     initialize() {
       return api.getCompanies().then(response => {
-        this.companies = response.data;
+        response.data.status == 500
+          ? (this.alertDialog = true) &&
+            (this.alertMessage = response.data.message)
+          : (this.companies = response.data);
       });
     },
 
@@ -138,8 +157,11 @@ export default {
     },
 
     deleteCompanyConfirm() {
-      return api.deleteCompany(this.editedCompany.ID).then(() => {
-        this.companies.splice(this.editedIndex, 1) && this.closeDelete();
+      return api.deleteCompany(this.editedCompany.ID).then(response => {
+        response.status == 400 || response.data.status == 500
+          ? (this.alertDialog = true) &&
+            (this.alertMessage = response.data.message)
+          : this.companies.splice(this.editedIndex, 1) && this.closeDelete();
       });
     },
 
@@ -161,13 +183,23 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        return api.updateCompany(this.editedCompany.ID, this.editedCompany).then(() => {
-          Object.assign(this.companies[this.editedIndex], this.editedCompany) &&
-            this.close();
-        });
+        return api
+          .updateCompany(this.editedCompany.ID, this.editedCompany)
+          .then(response => {
+            response.status == 400 || response.data.status == 500
+              ? (this.alertDialog = true) &&
+                (this.alertMessage = response.data.message)
+              : Object.assign(
+                  this.companies[this.editedIndex],
+                  this.editedCompany
+                ) && this.close();
+          });
       } else {
-        return api.createCompany(this.editedCompany).then(() => {
-          this.companies.push(this.editedCompany) && this.close();
+        return api.createCompany(this.editedCompany).then(response => {
+          response.data.status == 400 || response.data.status == 500
+            ? (this.alertDialog = true) &&
+              (this.alertMessage = response.data.message)
+            : this.companies.push(this.editedCompany) && this.close();
         });
       }
     }
