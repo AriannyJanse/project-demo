@@ -21,13 +21,6 @@
                 <v-row>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
-                      v-model="editedCompany.companyId"
-                      label="Company ID"
-                      :disabled="true"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
                       v-model="editedCompany.name"
                       label="Name"
                     ></v-text-field>
@@ -83,27 +76,25 @@
 </template>
 
 <script>
+import api from "@/api";
 export default {
   data: () => ({
     dialog: false,
     dialogDelete: false,
     headers: [
       {
-        text: "Company ID",
+        text: "Name",
         align: "start",
-        value: "companyId"
+        value: "name"
       },
-      { text: "Name", value: "name" },
       { text: "Actions", value: "actions", sortable: false }
     ],
     companies: [],
     editedIndex: -1,
     editedCompany: {
-      companyId: 0,
       name: ""
     },
     defaultCompany: {
-      companyId: 0,
       name: ""
     }
   }),
@@ -129,16 +120,9 @@ export default {
 
   methods: {
     initialize() {
-      this.companies = [
-        {
-          companyId: 1,
-          name: "Pepitos company"
-        },
-        {
-          companyId: 2,
-          name: "Pedritos company"
-        }
-      ];
+      return api.getCompanies().then(response => {
+        this.companies = response.data;
+      });
     },
 
     editCompany(item) {
@@ -154,8 +138,9 @@ export default {
     },
 
     deleteCompanyConfirm() {
-      this.companies.splice(this.editedIndex, 1);
-      this.closeDelete();
+      return api.deleteCompany(this.editedCompany.ID).then(() => {
+        this.companies.splice(this.editedIndex, 1) && this.closeDelete();
+      });
     },
 
     close() {
@@ -176,11 +161,15 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.companies[this.editedIndex], this.editedCompany);
+        return api.updateCompany(this.editedCompany.ID, this.editedCompany).then(() => {
+          Object.assign(this.companies[this.editedIndex], this.editedCompany) &&
+            this.close();
+        });
       } else {
-        this.companies.push(this.editedCompany);
+        return api.createCompany(this.editedCompany).then(() => {
+          this.companies.push(this.editedCompany) && this.close();
+        });
       }
-      this.close();
     }
   }
 };

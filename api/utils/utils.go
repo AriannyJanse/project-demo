@@ -10,7 +10,6 @@ func Message(status int, message string) map[string]interface{} {
 }
 
 func Respond(writer http.ResponseWriter, statusCode int, data map[string]interface{}) {
-	writer.Header().Add("Content-Type", "application/json")
 	writer.WriteHeader(statusCode)
 	json.NewEncoder(writer).Encode(data)
 }

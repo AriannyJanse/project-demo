@@ -40,7 +40,7 @@
                   </v-col>
                   <v-col cols="12" sm="6" md="4">
                     <v-text-field
-                      v-model="editedUser.companyId"
+                      v-model="editedUser.company_id"
                       label="Company ID"
                     ></v-text-field>
                   </v-col>
@@ -78,6 +78,9 @@
         </v-dialog>
       </v-toolbar>
     </template>
+    <template v-slot:[`item.password`]="{}">
+      *********
+    </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon small class="mr-2" @click="editUser(item)">
         fas fa-edit
@@ -95,6 +98,7 @@
 </template>
 
 <script>
+import api from "@/api";
 export default {
   data: () => ({
     dialog: false,
@@ -108,7 +112,7 @@ export default {
       },
       { text: "Email", value: "email" },
       { text: "Password", value: "password" },
-      { text: "Company ID", value: "companyId" },
+      { text: "Company ID", value: "company_id" },
       { text: "Actions", value: "actions", sortable: false }
     ],
     users: [],
@@ -117,13 +121,13 @@ export default {
       nickname: "",
       email: "",
       password: "",
-      companyId: 0
+      company_id: 0
     },
     defaultUser: {
       nickname: "",
       email: "",
       password: "",
-      companyId: 0
+      company_id: 0
     }
   }),
 
@@ -148,20 +152,9 @@ export default {
 
   methods: {
     initialize() {
-      this.users = [
-        {
-          nickname: "JhonDoe",
-          email: "jhon@doe.com",
-          password: "*****",
-          companyId: 1
-        },
-        {
-          nickname: "DanDavis",
-          email: "dan@davis@ejemplo.com",
-          password: "*****",
-          companyId: 2
-        }
-      ];
+      return api.getUsers().then(response => {
+        this.users = response.data;
+      });
     },
 
     editUser(item) {
@@ -177,8 +170,9 @@ export default {
     },
 
     deleteUserConfirm() {
-      this.users.splice(this.editedIndex, 1);
-      this.closeDelete();
+      return api.deleteUser(this.editedUser.ID).then(() => {
+        this.users.splice(this.editedIndex, 1) && this.closeDelete();
+      });
     },
 
     close() {
@@ -199,11 +193,15 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.users[this.editedIndex], this.editedUser);
+        return api.updateUser(this.editedUser.ID, this.editedUser).then(() => {
+          Object.assign(this.users[this.editedIndex], this.editedUser) &&
+            this.close();
+        });
       } else {
-        this.users.push(this.editedUser);
+        return api.createUser(this.editedUser).then(() => {
+          this.users.push(this.editedUser) && this.close();
+        });
       }
-      this.close();
     }
   }
 };
