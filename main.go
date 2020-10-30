@@ -27,9 +27,9 @@ func main() {
 	api.HandleFunc("/companies/{id}", controllers.UpdateCompanyByID).Methods(http.MethodPut)
 	api.HandleFunc("/companies/{id}", controllers.DeleteCompanyByID).Methods(http.MethodDelete)
 
-	corsHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
+	corsHeaders := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"})
 	corsOrigins := handlers.AllowedOrigins([]string{"*"})
-	corsMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"})
+	corsMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS", "DELETE"})
 
 	fmt.Println("\nListening to port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(corsOrigins, corsHeaders, corsMethods)(router)))

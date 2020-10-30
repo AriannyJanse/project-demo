@@ -91,6 +91,10 @@ func GetUserByID(id uint) *User {
 
 func (user *User) UpdateUserByID(id uint) map[string]interface{} {
 
+	if resp, ok := user.Validate(); !ok {
+		return resp
+	}
+
 	oldUser := GetUserByID(id)
 	if oldUser == nil {
 		return utils.Message(http.StatusNotFound, "Cannot find the user")

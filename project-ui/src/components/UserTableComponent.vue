@@ -18,33 +18,39 @@
 
             <v-card-text>
               <v-container>
-                <v-row>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedUser.nickname"
-                      label="Nickname"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedUser.email"
-                      label="Email"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedUser.password"
-                      label="Password"
-                      type="password"
-                    ></v-text-field>
-                  </v-col>
-                  <v-col cols="12" sm="6" md="4">
-                    <v-text-field
-                      v-model="editedUser.companyId"
-                      label="Company ID"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
+                <v-form v-model="valid">
+                  <v-row>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-text-field
+                        v-model="editedUser.nickname"
+                        :rules="[rules.required]"
+                        label="Nickname"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-text-field
+                        v-model="editedUser.email"
+                        :rules="[rules.required ,rules.email]"
+                        label="Email"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-text-field
+                        v-model="editedUser.password"
+                        label="Password"
+                        :rules="[rules.required]"
+                        type="password"
+                      ></v-text-field>
+                    </v-col>
+                    <v-col cols="12" sm="6" md="4">
+                      <v-text-field
+                        v-model.number="editedUser.company_id"
+                        :rules="[rules.required ,rules.companyID]"
+                        label="Company ID"
+                      ></v-text-field>
+                    </v-col>
+                  </v-row>
+                </v-form>
               </v-container>
             </v-card-text>
 
@@ -53,7 +59,12 @@
               <v-btn color="blue darken-1" text @click="close">
                 Cancel
               </v-btn>
-              <v-btn color="blue darken-1" text @click="save">
+              <v-btn
+                color="blue darken-1"
+                text
+                @click="save"
+                :disabled="!valid"
+              >
                 Save
               </v-btn>
             </v-card-actions>
@@ -76,7 +87,19 @@
             </v-card-actions>
           </v-card>
         </v-dialog>
+        <v-dialog v-model="alertDialog" width="300">
+          <v-alert
+            style="margin-bottom: 0;"
+            type="error"
+            transition="scale-transition"
+          >
+            {{ alertMessage }}
+          </v-alert>
+        </v-dialog>
       </v-toolbar>
+    </template>
+    <template v-slot:[`item.password`]="{}">
+      *********
     </template>
     <template v-slot:[`item.actions`]="{ item }">
       <v-icon small class="mr-2" @click="editUser(item)">
@@ -95,8 +118,12 @@
 </template>
 
 <script>
+import api from "@/api";
 export default {
   data: () => ({
+    valid: false,
+    alertDialog: false,
+    alertMessage: "",
     dialog: false,
     dialogDelete: false,
     headers: [
@@ -108,7 +135,7 @@ export default {
       },
       { text: "Email", value: "email" },
       { text: "Password", value: "password" },
-      { text: "Company ID", value: "companyId" },
+      { text: "Company ID", value: "company_id" },
       { text: "Actions", value: "actions", sortable: false }
     ],
     users: [],
@@ -117,13 +144,21 @@ export default {
       nickname: "",
       email: "",
       password: "",
-      companyId: 0
+      company_id: 0
     },
     defaultUser: {
       nickname: "",
       email: "",
       password: "",
-      companyId: 0
+      company_id: 0
+    },
+    rules: {
+      required: value => !!value || "This field is required",
+      email: value => {
+        const pattern = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return pattern.test(value) || "Invalid email.";
+      },
+      companyID: value => value > 0 || "Company ID must be greater than 0"
     }
   }),
 
@@ -148,20 +183,12 @@ export default {
 
   methods: {
     initialize() {
-      this.users = [
-        {
-          nickname: "JhonDoe",
-          email: "jhon@doe.com",
-          password: "*****",
-          companyId: 1
-        },
-        {
-          nickname: "DanDavis",
-          email: "dan@davis@ejemplo.com",
-          password: "*****",
-          companyId: 2
-        }
-      ];
+      return api.getUsers().then(response => {
+        response.data.status == 500
+          ? (this.alertDialog = true) &&
+            (this.alertMessage = response.data.message)
+          : (this.users = response.data);
+      });
     },
 
     editUser(item) {
@@ -177,8 +204,12 @@ export default {
     },
 
     deleteUserConfirm() {
-      this.users.splice(this.editedIndex, 1);
-      this.closeDelete();
+      return api.deleteUser(this.editedUser.ID).then((response) => {
+        response.status == 400 || response.data.status == 500
+          ? (this.alertDialog = true) &&
+            (this.alertMessage = response.data.message)
+          : this.users.splice(this.editedIndex, 1) && this.closeDelete();
+      });
     },
 
     close() {
@@ -199,11 +230,23 @@ export default {
 
     save() {
       if (this.editedIndex > -1) {
-        Object.assign(this.users[this.editedIndex], this.editedUser);
+        return api
+          .updateUser(this.editedUser.ID, this.editedUser)
+          .then((response) => {
+            response.status == 400 || response.data.status == 500
+              ? (this.alertDialog = true) &&
+                (this.alertMessage = response.data.message)
+              : Object.assign(this.users[this.editedIndex], this.editedUser) &&
+                this.close();
+          });
       } else {
-        this.users.push(this.editedUser);
+        return api.createUser(this.editedUser).then((response) => {
+          response.data.status == 400 || response.data.status == 500
+            ? (this.alertDialog = true) &&
+              (this.alertMessage = response.data.message)
+            : this.users.push(this.editedUser) && this.close();
+        });
       }
-      this.close();
     }
   }
 };

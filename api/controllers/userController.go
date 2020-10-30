@@ -13,6 +13,10 @@ import (
 
 var CreateUser = func(writer http.ResponseWriter, request *http.Request) {
 
+	if request.Method == "OPTIONS" {
+		return
+	}
+
 	user := &models.User{}
 
 	err := json.NewDecoder(request.Body).Decode(user)
@@ -34,6 +38,10 @@ var CreateUser = func(writer http.ResponseWriter, request *http.Request) {
 
 var GetAllUsers = func(writer http.ResponseWriter, request *http.Request) {
 
+	if request.Method == "OPTIONS" {
+		return
+	}
+
 	data := models.GetUsers()
 	if data == nil {
 		utils.Respond(writer, http.StatusInternalServerError, utils.Message(http.StatusInternalServerError, "Cannot get the users"))
@@ -45,6 +53,10 @@ var GetAllUsers = func(writer http.ResponseWriter, request *http.Request) {
 }
 
 var GetUserByID = func(writer http.ResponseWriter, request *http.Request) {
+
+	if request.Method == "OPTIONS" {
+		return
+	}
 
 	params := mux.Vars(request)
 	id, err := strconv.Atoi(params["id"])
@@ -64,6 +76,10 @@ var GetUserByID = func(writer http.ResponseWriter, request *http.Request) {
 }
 
 var UpdateUserByID = func(writer http.ResponseWriter, request *http.Request) {
+
+	if request.Method == "OPTIONS" {
+		return
+	}
 
 	params := mux.Vars(request)
 	id, err := strconv.Atoi(params["id"])
@@ -91,6 +107,10 @@ var UpdateUserByID = func(writer http.ResponseWriter, request *http.Request) {
 }
 
 var DeleteUserByID = func(writer http.ResponseWriter, request *http.Request) {
+
+	if request.Method == "OPTIONS" {
+		return
+	}
 
 	params := mux.Vars(request)
 	id, err := strconv.Atoi(params["id"])
